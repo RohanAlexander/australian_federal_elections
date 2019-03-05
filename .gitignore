@@ -1,0 +1,7 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+/inputs/voting_data
+.DS_Store
+inputs/.DS_Store
