@@ -456,8 +456,8 @@ clean_adams_voting_data <-
 		# The bits and pieces of the voting data - name, party, votes_count, votes_share, swing - are all on the one line. 
 		# I am separating these using brute force based on character counts.
 		# I know this isn't the best thing to do.
-		# But I can't think of some other way to do this ATM, and the plane is landing soon.
-		# This is admirable attention to detail by Adam, but it seems as though he always pushes the characters number for the first preferences by 32, and so on! A few exceptions and differences, but good enough.
+		# But I can't think of some other way to do this ATM.
+		# This is admirable attention to detail by Adam - it seems as though he always pushes the characters number for the first preferences by 32, and so on! A few exceptions and differences, but good enough.
 		# DON'T TELL MONICA ABOUT THIS. SHE'LL DIVORCE ME.
 		# Remember that order matters for case_when - go from most- to least-specific
 		str_position_for_name <- case_when(
