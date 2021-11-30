@@ -879,8 +879,9 @@ voting_rounds <- all_voting %>%
 	filter(year(election_date) > 1918) %>%
 	group_by(vote_redistribution_round) %>%
 	summarise(count = n())
+# Small typo in 2019 Waringah
+all_voting$vote_redistribution_round[all_voting$vote_redistribution_round == "98"] <- "9"
 rm(voting_rounds)
-
 
 # Fix a date
 # There's a typo in the NT file where it has the wrong date
@@ -921,6 +922,10 @@ counts_by_votes_shares <- all_voting %>%
 	filter(space == TRUE | letters == TRUE)
 
 rm(counts_by_votes_shares)
+
+# Fix a few
+all_voting$votes_share[all_voting$votes_share == "71.4" & all_voting$original_name == "Wilson"] <- "64.48"
+all_voting$votes_share[all_voting$votes_share == "28.6" & all_voting$original_name == "Payne"] <- "35.52"
 
 # Check the voter counts and shares and turnouts for whether reasonable.
 # This check will best identify issues if you don't force numeric in the function
@@ -967,8 +972,6 @@ vote_share <- all_voting %>%
 	) %>%
 	filter(space == TRUE | letters == TRUE | punctuation == TRUE)
 rm(vote_share)
-
-
 
 
 #### Fix names in preferences ####
@@ -1113,7 +1116,7 @@ all_voting$surname[all_voting$election_date == "2016-07-02" & all_voting$divisio
 
 all_voting_firsts <- all_voting %>% 
 	filter(vote_redistribution_round == 1) %>% 
-	select(name, election_date, division, surname)
+	select(name, election_date, division, surname, party)
 
 # all_voting_firsts <- all_voting_firsts %>%
 # 	group_by(election_date, division, surname) %>%
@@ -1156,7 +1159,8 @@ all_voting_others_joined <- all_voting_others %>%
 # rm(all_voting_others)
 
 all_voting_others_joined <- all_voting_others_joined %>% 
-	rename(original_name = name.x, full_name = name.y)
+	rename(original_name = name.x, full_name = name.y, party = party.y) %>% 
+	select(-party.x)
 
 names(all_voting_others_joined)
 
@@ -1173,6 +1177,81 @@ all_voting <- all_voting %>%
 	arrange(election_date, state, division, vote_redistribution_round, full_name)
 
 rm(all_voting_firsts, all_voting_others, all_voting_others_joined)
+
+
+# Fix division names
+all_voting <- all_voting %>% 
+	mutate(division = str_to_sentence(division))
+
+# Add a matching name
+all_voting <- all_voting %>% 
+	mutate(full_name_for_matching = str_to_lower(full_name),
+				 full_name_for_matching = str_remove(full_name_for_matching, "'")
+				 )
+
+
+
+#### Identify whether 2PP or not ####
+# 2PP is the final vote count after preferences when there are only two candidates left. Usually it's ALP vs whatever is the major conservative party, but sometimes it's not.
+# Identify 2PP or closest approximation
+all_voting <- all_voting %>%
+	group_by(election_date, division) %>%
+	mutate(
+		twoPP = max(vote_redistribution_round),
+		twoPP = if_else(vote_redistribution_round == twoPP, 1, 0),
+		twoPP = if_else(election_date < ymd("1918-12-14"), 0, twoPP) # Preferences only start in 14 December 1918, so anything before that is certainly not a 2PP.
+	) %>%
+	ungroup()
+
+all_voting$twoPP %>% sum()
+
+# The above will fail is there is only... 
+# Sometimes they haven't actually worked out the 2PP counts
+# twoPP = if_else(vote_redistribution_round == 1, 0, twoPP) # Sometimes, especially in the earlier data, they haven't actually worked out a 2PP count - all we have is a first-preferences vote. 
+
+# Get the number of candidates by election, by division, by vote redistribution round.
+all_voting <- all_voting %>%
+	group_by(election_date, division, vote_redistribution_round) %>%
+	mutate(
+		number_of_candidates = n()
+	) %>%
+	ungroup()
+
+
+# Identify whether the winner or not
+all_voting <- all_voting %>%
+	group_by(election_date, division) %>%
+	mutate(
+		winnerDummy = if_else(twoPP == 1, max(votes_count), as.integer(0)),
+		winnerDummy = if_else(winnerDummy == votes_count, winnerDummy, as.integer(0)),
+		winnerDummy = if_else(winnerDummy != 0, as.integer(1), as.integer(0))
+	) %>%
+	ungroup()
+
+all_voting <- all_voting %>%
+	group_by(election_date, division) %>%
+	mutate(
+		winnerDummyOld = if_else(election_date < ymd("1918-12-14"), max(votes_count), as.integer(0)),
+		winnerDummyOld = if_else(winnerDummyOld == votes_count, winnerDummyOld, as.integer(0)),
+		winnerDummyOld = if_else(winnerDummyOld != 0, as.integer(1), as.integer(0))
+	) %>%
+	ungroup()
+
+all_voting <- all_voting %>%
+	mutate(
+		winnerDummy = if_else(election_date < ymd("1918-12-14"), winnerDummyOld, winnerDummy)
+	) %>%
+	select(-winnerDummyOld)
+
+# Test if we've identified someone who isn't capitalised
+all_voting_hmm <- all_voting %>%
+	mutate(
+		winnerCheck = if_else(winnerDummy == 1 & capitalised != 1, 1,0)
+	) %>% 
+	filter(winnerCheck == 1)
+
+
+
 
 
 
