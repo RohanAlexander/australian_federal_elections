@@ -3,7 +3,7 @@
 # Purpose: This file takes Australian voting text files downloaded from Adam Carr and cleans them into tables that can be analysed.
 # Author: Rohan Alexander
 # Email: rohan.alexander@anu.edu.au
-# Last updated: 5 March 2019
+# Last updated: 9 December 2021
 # Prerequisites: Download the text files (see get_HoR_voting.R)
 # To do:
 # - Probably better to split the function into pieces.
@@ -29,7 +29,7 @@ library(stringr)
 clean_adams_voting_data <-
 	function(name_of_input_text_file) {
 		# For testing
-		# name_of_input_text_file <- c("inputs/voting_data/2007repsby.txt")
+		# name_of_input_text_file <- c("inputs/voting_data/1993repsqld.txt")
 		
 		#### Read data and initial information ####
 		# Read data and convert to tibble
@@ -332,6 +332,7 @@ clean_adams_voting_data <-
 			) %>%
 			ungroup()
 		
+		class(votingData$vote_redistribution_round)
 		
 		#### 2PP ####
 		# 2PP is the final vote count after preferences when there are only two candidates left. Usually it's ALP vs whatever is the major conservative party, but sometimes it's not.
@@ -531,23 +532,23 @@ clean_adams_voting_data <-
 		# votingData <- votingData %>%
 		# 	separate(raw_data,
 		# 					 into = c("name", "party", "votes_count", "votes_share", "swing"),
-		# 					 sep = "[:space:]{2,}",
+		# 					 sep = "[[:space:]]{2,}",
 		# 					 fill = "right")
 		# But separate doesn't work easily because some are missing a party, so you'd end up with a bunch of exceptions anyway.
 		
 		# Clean up the grabs
 		votingData_first_prefs <- votingData_first_prefs %>%
 			mutate(
-				votes_count = str_remove(votes_count, "[:space:]{2,}[:digit:]$"),
-				votes_count = str_remove(votes_count, "[:space:]{2,}-$"),
-				votes_share = str_remove(votes_share, "^[:digit:][:space:]{2,}"),
+				votes_count = str_remove(votes_count, "[[:space:]]{2,}[:digit:]$"),
+				votes_count = str_remove(votes_count, "[[:space:]]{2,}-$"),
+				votes_share = str_remove(votes_share, "^[[:digit:]][[:space:]]{2,}"),
 				votes_share = str_remove(votes_share, "\\(-$"),
-				votes_share = str_remove(votes_share, "\\(?\\+[:digit:]?$"), # Looks for something like: "52.0 (-" or "35.3 (+0"
-				votes_share = str_remove(votes_share, "\\(?\\-[:digit:]?$"), # Looks for something like: "52.0 (-" or "35.3 (-0"
-				votes_share = str_remove(votes_share, "\\([:space:]?$"), # Looks for trailing "(" or "( )
-				votes_share = str_remove(votes_share, "[:space:]{2,}0$"), # Looks for trailing "  0"
-				swing = str_remove(swing, "^[:digit:][:space:]{2,}"), # Looks for leading numbers followed by two spaces "9  22.1"
-				swing = str_remove(swing, "^[:digit:][:space:]?$"), # Looks for leading numbers followed by a space and nothing else "9 " or "9"
+				votes_share = str_remove(votes_share, "\\(?\\+[[:digit:]]?$"), # Looks for something like: "52.0 (-" or "35.3 (+0"
+				votes_share = str_remove(votes_share, "\\(?\\-[[:digit:]]?$"), # Looks for something like: "52.0 (-" or "35.3 (-0"
+				votes_share = str_remove(votes_share, "\\([[:space:]]?$"), # Looks for trailing "(" or "( )
+				votes_share = str_remove(votes_share, "[[:space:]]{2,}0$"), # Looks for trailing "  0"
+				swing = str_remove(swing, "^[[:digit:]][[:space:]]{2,}"), # Looks for leading numbers followed by two spaces "9  22.1"
+				swing = str_remove(swing, "^[[:digit:]][[:space:]]?$"), # Looks for leading numbers followed by a space and nothing else "9 " or "9"
 			)
 		
 		# Special case - one of the vote shares is accidently negative - for "Adrian van der Byl" in 2013repsnsw
@@ -603,7 +604,7 @@ clean_adams_voting_data <-
 							"votes_count",
 							"votes_share"
 						),
-						sep = "[:space:]{2,}",
+						sep = "[[:space:]]{2,}",
 						remove = FALSE,
 						extra = "merge",
 						fill = "right"
@@ -619,7 +620,7 @@ clean_adams_voting_data <-
 							"votes_count",
 							"votes_share"
 						),
-						sep = "[:space:]{2,}",
+						sep = "[[:space:]]{2,}",
 						remove = FALSE,
 						extra = "merge",
 						fill = "right"
@@ -865,8 +866,8 @@ all_voting <- all_voting %>%
 # Checkk for unusual
 counts_by_name <- all_voting %>%
 	mutate(
-		numbers = str_detect(str_squish(name), "[:digit:]"),
-		punctuation = str_detect(str_squish(name), "[:punct:]")
+		numbers = str_detect(str_squish(name), "[[:digit:]]"),
+		punctuation = str_detect(str_squish(name), "[[:punct:]]")
 	) %>%
 	filter(numbers == TRUE | punctuation == TRUE)
 # Follow up on to check if right, because seems unusual
@@ -905,9 +906,9 @@ rm(counts_by_party)
 # This check will best identify issues if you don't force numeric in the function
 counts_by_first_pref <- all_voting %>%
 	mutate(
-		space = str_detect(str_squish(votes_count), "[:space:]"),
-		letters = str_detect(str_squish(votes_count), "[:alpha:]"),
-		punctuation = str_detect(str_squish(votes_count), "[:punct:]")
+		space = str_detect(str_squish(votes_count), "[[:space:]]"),
+		letters = str_detect(str_squish(votes_count), "[[:alpha:]]"),
+		punctuation = str_detect(str_squish(votes_count), "[[:punct:]]")
 	) %>%
 	filter(space == TRUE | letters == TRUE)
 rm(counts_by_first_pref)
@@ -916,8 +917,8 @@ rm(counts_by_first_pref)
 # This check will best identify issues if you don't force numeric in the function
 counts_by_votes_shares <- all_voting %>%
 	mutate(
-		space = str_detect(str_squish(votes_share), "[:space:]"),
-		letters = str_detect(str_squish(votes_share), "[:alpha:]")
+		space = str_detect(str_squish(votes_share), "[[:space:]]"),
+		letters = str_detect(str_squish(votes_share), "[[:alpha:]]")
 	) %>%
 	filter(space == TRUE | letters == TRUE)
 
@@ -931,24 +932,24 @@ all_voting$votes_share[all_voting$votes_share == "28.6" & all_voting$original_na
 # This check will best identify issues if you don't force numeric in the function
 enrolled <- all_voting %>%
 	mutate(
-		space = str_detect(str_squish(division_num_enrolled), "[:space:]"),
-		letters = str_detect(str_squish(division_num_enrolled), "[:alpha:]"),
-		punctuation = str_detect(str_squish(division_num_enrolled), "[:punct:]")
+		space = str_detect(str_squish(division_num_enrolled), "[[:space:]]"),
+		letters = str_detect(str_squish(division_num_enrolled), "[[:alpha:]]"),
+		punctuation = str_detect(str_squish(division_num_enrolled), "[[:punct:]]")
 	) %>%
 	filter(space == TRUE | letters == TRUE | punctuation == TRUE)
 voted <- all_voting %>%
 	mutate(
-		space = str_detect(str_squish(division_num_voted), "[:space:]"),
-		letters = str_detect(str_squish(division_num_voted), "[:alpha:]"),
-		punctuation = str_detect(str_squish(division_num_voted), "[:punct:]")
+		space = str_detect(str_squish(division_num_voted), "[[:space:]]"),
+		letters = str_detect(str_squish(division_num_voted), "[[:alpha:]]"),
+		punctuation = str_detect(str_squish(division_num_voted), "[[:punct:]]")
 	) %>%
 	filter(space == TRUE | letters == TRUE | punctuation == TRUE)
 share <- all_voting %>%
 	mutate(
 		division_percent_voted = str_remove(division_percent_voted, "\\."),
-		space = str_detect(str_squish(division_percent_voted), "[:space:]"),
-		letters = str_detect(str_squish(division_percent_voted), "[:alpha:]"),
-		punctuation = str_detect(str_squish(division_percent_voted), "[:punct:]")
+		space = str_detect(str_squish(division_percent_voted), "[[:space:]]"),
+		letters = str_detect(str_squish(division_percent_voted), "[[:alpha:]]"),
+		punctuation = str_detect(str_squish(division_percent_voted), "[[:punct:]]")
 	) %>%
 	filter(space == TRUE | letters == TRUE | punctuation == TRUE)
 
@@ -957,18 +958,18 @@ rm(enrolled, voted, share)
 # Check the preferences
 vote_count <- all_voting %>%
 	mutate(
-		space = str_detect(str_squish(redistributed_vote_count), "[:space:]"),
-		letters = str_detect(str_squish(redistributed_vote_count), "[:alpha:]"),
-		punctuation = str_detect(str_squish(redistributed_vote_count), "[:punct:]")
+		space = str_detect(str_squish(redistributed_vote_count), "[[:space:]]"),
+		letters = str_detect(str_squish(redistributed_vote_count), "[[:alpha:]]"),
+		punctuation = str_detect(str_squish(redistributed_vote_count), "[[:punct:]]")
 	) %>%
 	filter(space == TRUE | letters == TRUE | punctuation == TRUE)
 rm(vote_count)
 vote_share <- all_voting %>%
 	mutate(
 		redistributed_vote_share = str_remove(redistributed_vote_share, "\\."),
-		space = str_detect(str_squish(redistributed_vote_share), "[:space:]"),
-		letters = str_detect(str_squish(redistributed_vote_share), "[:alpha:]"),
-		punctuation = str_detect(str_squish(redistributed_vote_share), "[:punct:]")
+		space = str_detect(str_squish(redistributed_vote_share), "[[:space:]]"),
+		letters = str_detect(str_squish(redistributed_vote_share), "[[:alpha:]]"),
+		punctuation = str_detect(str_squish(redistributed_vote_share), "[[:punct:]]")
 	) %>%
 	filter(space == TRUE | letters == TRUE | punctuation == TRUE)
 rm(vote_share)
@@ -1051,7 +1052,7 @@ all_voting$surname[all_voting$name == "Zillah Jackson" & all_voting$txt_file == 
 all_voting$surname[all_voting$name == "Jackson, Z" & all_voting$txt_file == "1996repsqld"] <- "ZillahJackson"
 
 all_voting <- all_voting %>%
-	mutate(capitalised = str_detect(name, "[:upper:]{2,}"),
+	mutate(capitalised = str_detect(name, "[[:upper:]]{2,}"),
 				 name = str_to_title(name))
 
 
@@ -1190,6 +1191,12 @@ all_voting <- all_voting %>%
 				 )
 
 
+# Fix the class
+all_voting <- 
+	all_voting %>% 
+	mutate(vote_redistribution_round = as.integer(vote_redistribution_round))
+
+
 
 #### Identify whether 2PP or not ####
 # 2PP is the final vote count after preferences when there are only two candidates left. Usually it's ALP vs whatever is the major conservative party, but sometimes it's not.
@@ -1277,7 +1284,7 @@ all_voting %>%
 	geom_density(aes(x = votes_count))
 
 
-# Some intersting questions:
+# Some interesting questions:
 # Who got the most first preference votes ever?
 # Who got the least first preference votes and was still elected?
 # Is there a difference between men and women?

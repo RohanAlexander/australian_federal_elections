@@ -19,7 +19,7 @@
 
 
 #### Set up workspace ####
-# devtools::install_github("RohanAlexander/AustralianPoliticians")
+# install.packages("AustralianPoliticians")
 library(AustralianPoliticians) # If you use this package, then email me and I'll send you a hex sticker.
 library(lubridate)
 library(tidyverse)
@@ -27,9 +27,9 @@ library(tidyverse)
 # Read in voting data
 voting_data <- read_csv("outputs/voting_data.csv", guess_max = 10000)
 # Read in Australian politicians data 
-all <- AustralianPoliticians::all %>% as_tibble()
+all <- AustralianPoliticians::get_auspol('all')
 # Read in specifics about their division
-by_division <- AustralianPoliticians::by_division_mps %>% as_tibble()
+by_division <- AustralianPoliticians::get_auspol('mps')
 
 
 #### Prepare the dataset for matching ####
@@ -53,7 +53,7 @@ all$name_and_division_for_matching <- str_remove_all(all$name_and_division_for_m
 all <- all %>% 
 	select(uniqueID, displayName, surname, allOtherNames, division, name_and_division_for_matching)
 
-# The politicians dataset only have people that won, so we don't want/need unsuccesful candidates as it just clutters things 
+# The politicians dataset only have people that won, so we don't want/need unsuccessful candidates as it just clutters things 
 # voting_data <- voting_data %>% 
 # 	filter(winnerDummy == 1)
 # Create the same mash for the voting data
@@ -269,8 +269,9 @@ voting_data <- voting_data %>%
 # 	ungroup() %>% 
 # 	arrange(desc(counter), name_and_division_for_matching)
 
-voting_data <- voting_data %>% 
-	select(-division_sent, -full_name_for_matching, -full_name, -surname, -name_and_division_for_matching)
+voting_data <- 
+	voting_data %>% 
+	select(-full_name_for_matching, -full_name, -surname, -name_and_division_for_matching)
 
 # hmmm <- voting_data %>% 
 # 	filter(is.na(uniqueID) & capitalised == 1)
