@@ -278,6 +278,14 @@ voting_data <-
 # hmmmm <- voting_data %>% 
 # 	filter(is.na(uniqueID) & winnerDummy == 1)
 
+voting_data <- 
+	voting_data %>%
+	janitor::clean_names()
+
+voting_data <- 
+	voting_data %>%
+	rename(uniqueID = unique_id)
+
 # Save
 write_csv(voting_data, "outputs/voting_data_with_ids.csv")
 

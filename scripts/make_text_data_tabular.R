@@ -29,7 +29,7 @@ library(stringr)
 clean_adams_voting_data <-
 	function(name_of_input_text_file) {
 		# For testing
-		# name_of_input_text_file <- c("inputs/voting_data/1993repsqld.txt")
+		# name_of_input_text_file <- c("inputs/voting_data/2019repsqld.txt")
 		
 		#### Read data and initial information ####
 		# Read data and convert to tibble
@@ -798,6 +798,8 @@ all_voting <-
 
 rm(all_of_adams_files, clean_adams_voting_data)
 
+# all_voting <- votingData
+
 
 #### Cleaning and checks of subsequent data ####
 # Make the states consistent
@@ -1051,6 +1053,13 @@ all_voting$surname[all_voting$name == "LINDSAY, P" & all_voting$txt_file == "199
 all_voting$surname[all_voting$name == "Zillah Jackson" & all_voting$txt_file == "1996repsqld"] <- "ZillahJackson"
 all_voting$surname[all_voting$name == "Jackson, Z" & all_voting$txt_file == "1996repsqld"] <- "ZillahJackson"
 
+all_voting$surname[all_voting$name == "Terry Young" & all_voting$txt_file == "2019repsqld"] <- "TerryYoung"
+all_voting$surname[all_voting$name == "T Young" & all_voting$txt_file == "2019repsqld"] <- "TerryYoung"
+all_voting$surname[all_voting$name == "T YOUNG" & all_voting$txt_file == "2019repsqld"] <- "TerryYoung"
+
+
+
+
 all_voting <- all_voting %>%
 	mutate(capitalised = str_detect(name, "[[:upper:]]{2,}"),
 				 name = str_to_title(name))
@@ -1159,13 +1168,15 @@ all_voting_others_joined <- all_voting_others %>%
 # 	filter(surname != "exhausted")
 # rm(all_voting_others)
 
-all_voting_others_joined <- all_voting_others_joined %>% 
-	rename(original_name = name.x, full_name = name.y, party = party.y) %>% 
+all_voting_others_joined <- 
+	all_voting_others_joined %>% 
+	rename(original_name = name.x, full_name = name.y, party = party.y) %>%
 	select(-party.x)
 
 names(all_voting_others_joined)
 
-all_voting_firsts <- all_voting %>% 
+all_voting_firsts <- 
+	all_voting %>% 
 	filter(vote_redistribution_round == 1) %>% 
 	rename(original_name = name) %>% 
 	mutate(full_name = original_name)
