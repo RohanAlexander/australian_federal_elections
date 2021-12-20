@@ -3,7 +3,7 @@
 # Purpose: This file takes Australian voting text files downloaded from Adam Carr and cleans them into tables that can be analysed.
 # Author: Rohan Alexander
 # Email: rohan.alexander@anu.edu.au
-# Last updated: 9 December 2021
+# Last updated: 18 December 2021
 # Prerequisites: Download the text files (see get_HoR_voting.R)
 # To do:
 # - Probably better to split the function into pieces.
@@ -29,7 +29,7 @@ library(stringr)
 clean_adams_voting_data <-
 	function(name_of_input_text_file) {
 		# For testing
-		# name_of_input_text_file <- c("inputs/voting_data/2019repsqld.txt")
+		# name_of_input_text_file <- c("inputs/voting_data/2019repstas.txt")
 		
 		#### Read data and initial information ####
 		# Read data and convert to tibble
@@ -289,6 +289,8 @@ clean_adams_voting_data <-
 		
 		#### Voting, Part 1 ####
 		# We need to isolate the votes.
+		# Fix a typo in the original data:
+		votingData$raw_data[votingData$raw_data =="4th count: Hutchinson's 15,777 votes distributed"] <- "5th count: Hutchinson's 15,777 votes distributed"
 		# The text files have each round of voting under the division name.
 		# Each round is split by a full line of hyphens: "---"
 		# So we're going to identify the first-preferences based on this.
@@ -1056,6 +1058,13 @@ all_voting$surname[all_voting$name == "Jackson, Z" & all_voting$txt_file == "199
 all_voting$surname[all_voting$name == "Terry Young" & all_voting$txt_file == "2019repsqld"] <- "TerryYoung"
 all_voting$surname[all_voting$name == "T Young" & all_voting$txt_file == "2019repsqld"] <- "TerryYoung"
 all_voting$surname[all_voting$name == "T YOUNG" & all_voting$txt_file == "2019repsqld"] <- "TerryYoung"
+
+all_voting$surname[all_voting$name == "T Bell" & all_voting$txt_file == "2019repsqld"] <- "TraceyBell"
+all_voting$surname[all_voting$name == "Tracey Bell" & all_voting$txt_file == "2019repsqld"] <- "TraceyBell"
+
+all_voting$surname[all_voting$name == "Angie BELL" & all_voting$txt_file == "2019repsqld"] <- "AngieBell"
+all_voting$surname[all_voting$name == "A BELL" & all_voting$txt_file == "2019repsqld"] <- "AngieBell"
+
 
 
 
