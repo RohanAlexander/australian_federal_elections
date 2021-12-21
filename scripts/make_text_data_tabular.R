@@ -29,7 +29,7 @@ library(stringr)
 clean_adams_voting_data <-
 	function(name_of_input_text_file) {
 		# For testing
-		# name_of_input_text_file <- c("inputs/voting_data/1987repsnsw.txt")
+		# name_of_input_text_file <- c("inputs/voting_data/2010repsqld.txt")
 		
 		#### Read data and initial information ####
 		# Read data and convert to tibble
@@ -109,7 +109,7 @@ clean_adams_voting_data <-
 		
 		
 		#### Add division name and number of voters ####
-		# Helpers to disinguish the divisions and the bits of information within the divisions
+		# Helpers to distinguish the divisions and the bits of information within the divisions
 		votingData <- votingData %>%
 			mutate(
 				div = str_detect(raw_data, "={3,}"),
@@ -151,7 +151,8 @@ clean_adams_voting_data <-
 			"MENZIES, Vic                 90,966 enrolled, 85,410 (unknown%) voted"
 		
 		# Isolate the name of the division
-		votingData <- votingData %>%
+		votingData <- 
+			votingData %>%
 			mutate(div = ifelse(div_split_here == 1, raw_data, NA)) %>%
 			separate(
 				div,
@@ -232,14 +233,15 @@ clean_adams_voting_data <-
 		if (state_of_file %in% c(
 			"by",
 			"",
-			"benn2016",
-			"brad2016",
-			"frem2016",
-			"long2016",
-			"mayo2016",
-			"newe2016",
-			"pert2016",
-			"went2018"
+			"2004werr",
+			"2016benn",
+			"2016brad",
+			"2016frem",
+			"2016long",
+			"2016mayo",
+			"2016newe",
+			"2016pert",
+			"2018went"
 		)) {
 			votingData <- votingData %>%
 				separate(
@@ -303,7 +305,9 @@ clean_adams_voting_data <-
 			"9th count: Ellsmore's 19,593 votes distributed"
 		votingData$raw_data[votingData$raw_data == "7th count: Barker's 12,786 votes distributed"] <-
 			"8th count: Barker's 12,786 votes distributed"
-		
+		votingData$raw_data[votingData$raw_data == "13th count: Collins's 14,887 votes distributed"] <-
+			"14th count: Collins's 14,887 votes distributed"
+
 		# The text files have each round of voting under the division name.
 		# Each round is split by a full line of hyphens: "---"
 		# So we're going to identify the first-preferences based on this.
@@ -368,15 +372,15 @@ clean_adams_voting_data <-
 			file_txt_name %in% c("1996repsby") ~ "FRASER",
 			state_of_file == "by" ~ "BY-ELECTIONS",
 			file_txt_name %in% c(
-				"batm2016",
-				"benn2016",
-				"brad2016",
-				"frem2016",
-				"long2016",
-				"mayo2016",
-				"newe2016",
-				"pert2016",
-				"went2018"
+				"2016batm",
+				"2016benn",
+				"2016brad",
+				"2016frem",
+				"2016long",
+				"2016mayo",
+				"2016newe",
+				"2016pert",
+				"2018went"
 			) ~ "enrolled",
 			# The formatting of the by-elections in the 2016 period changes
 			year_of_file >= 2010 ~ "VOTING BY DIVISION",
@@ -419,15 +423,15 @@ clean_adams_voting_data <-
 			file_txt_name %in% c(
 				"2007repsby",
 				"2013repsby",
-				"batm2016",
-				"benn2016",
-				"brad2016",
-				"frem2016",
-				"long2016",
-				"mayo2016",
-				"newe2016",
-				"pert2016",
-				"went2018"
+				"2016batm",
+				"2016benn",
+				"2016brad",
+				"2016frem",
+				"2016long",
+				"2016mayo",
+				"2016newe",
+				"2016pert",
+				"2018went"
 			) ~ 4,
 			file_txt_name %in% c("1969repsby", "1993repsby") ~ 2,
 			state_of_file == "nt" & year_of_file <= 1998  ~ 1,
@@ -507,13 +511,13 @@ clean_adams_voting_data <-
 		votingData$raw_data[votingData$raw_data == "Natalie Abboud                    Grn      7,609  08.5   +03.1"] <-
 			"Natalie Abboud                    Grn    7,609  08.5   +03.1"
 		
-		# Special case - went2018
+		# Special case - 2018went
 		votingData$raw_data[votingData$raw_data == "Heath                  0                 1,729  02.3"] <-
 			"Heath                  0  0.00           1,729  02.3"
 		votingData$raw_data[votingData$raw_data == "Keldoulis              0                   307  00.4"] <-
 			"Keldoulis              0  0.00             307  00.4"
 		
-		# Special case - newe2016
+		# Special case - 2016newe
 		votingData$raw_data[votingData$raw_data == "Smyth                  0                   515  00.6"] <-
 			"Smyth                  0  0.00             515  00.6"
 		
@@ -1588,15 +1592,44 @@ all_voting <- all_voting %>%
 	) %>%
 	ungroup()
 
-all_voting <- all_voting %>%
+all_voting <- 
+	all_voting %>%
 	mutate(winnerDummy = if_else(election_date < ymd("1918-12-14"), winnerDummyOld, winnerDummy)) %>%
 	select(-winnerDummyOld)
+
+#### Messing around start
+
+# check_tpp <-
+# 	all_voting %>%
+# 	mutate(votes_share = as.double(votes_share)) %>%
+# 	group_by(division, election_date) %>%
+# 	mutate(check =
+# 				 	if_else(twoPP == 1 & number_of_candidates > 2,
+# 				 					NA_real_,
+# 				 					1)) %>%
+# 	mutate(check =
+# 				 	if_else(votes_share > 50,
+# 				 					1,
+# 				 					check)) %>%
+# 	ungroup() %>%
+# 	group_by(division, election_date) %>%
+# 	fill(check) %>% #default direction down
+# 	fill(check, .direction = "up") %>%
+# 	filter(is.na(check))
+# 
+# class(all_voting$votes_share)
+# class(all_voting$number_of_candidates)
+				 	
+	
+#### Messing around end
+
 
 # Test if we've identified someone who isn't capitalised
 all_voting_hmm <- all_voting %>%
 	mutate(winnerCheck = if_else(winnerDummy == 1 &
 															 	capitalised != 1, 1, 0)) %>%
 	filter(winnerCheck == 1)
+
 
 
 
@@ -1616,17 +1649,17 @@ write_csv(all_voting, "outputs/voting_data.csv")
 
 
 #### Debris ####
-# Some basic maps for fun.
-all_voting %>%
-	ggplot() +
-	geom_bar(aes(x = party)) +
-	coord_flip()
-
-all_voting %>%
-	filter(!votes_count == -1) %>%
-	ggplot() +
-	# geom_bar(aes(x = votes_count)) +
-	geom_density(aes(x = votes_count))
+# # Some basic maps for fun.
+# all_voting %>%
+# 	ggplot() +
+# 	geom_bar(aes(x = party)) +
+# 	coord_flip()
+# 
+# all_voting %>%
+# 	filter(!votes_count == -1) %>%
+# 	ggplot() +
+# 	# geom_bar(aes(x = votes_count)) +
+# 	geom_density(aes(x = votes_count))
 
 
 # Some interesting questions:

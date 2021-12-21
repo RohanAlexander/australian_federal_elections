@@ -3,5 +3,6 @@
 .RData
 .Ruserdata
 /inputs/voting_data
+/inputs/old_voting_data
 .DS_Store
 inputs/.DS_Store
